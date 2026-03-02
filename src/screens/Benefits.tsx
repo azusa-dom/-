@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNav } from '../App';
+import { useDemoData } from '../context/DemoDataContext';
 import { ChevronLeft, Shield, CheckCircle2, Activity, Heart, Stethoscope, FileText, GraduationCap, Video, Clock, Users, Award, AlertTriangle, Zap } from 'lucide-react';
 
 export function Benefits() {
   const { pop } = useNav();
+  const { membershipExpiry } = useDemoData();
   const [activeTab, setActiveTab] = useState<'package' | 'intro'>('package');
 
   return (
@@ -54,7 +56,7 @@ export function Benefits() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">有效期至</span>
-                  <span className="font-medium text-slate-800">2026-04-01</span>
+                  <span className="font-medium text-slate-800">{membershipExpiry}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">响应渠道</span>
@@ -170,25 +172,25 @@ export function Benefits() {
               </div>
             </section>
 
-            <section className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-lg">
+            <section className="bg-gradient-to-br from-blue-50 to-blue-100/60 rounded-3xl p-6 border border-blue-100 shadow-sm">
               <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
-                <Zap size={20} className="text-yellow-400" />
+                <Zap size={20} className="text-blue-600" />
                 专科转诊绿色通道
               </h2>
-              <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
                 无需在 NHS 系统长时间排队等待，快速对接优质医疗资源。
               </p>
-              <ul className="space-y-2 text-sm text-slate-200">
+              <ul className="space-y-2 text-sm text-slate-700">
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                   <span><strong>高级影像检查：</strong>X光、CT、MRI 快速预约</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                   <span><strong>专科医生转诊：</strong>骨科、皮肤科、眼科等提前沟通预订档期</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                   <span><strong>辅助康复跟踪：</strong>物理治疗、康复指导、康复社区与跟进</span>
                 </li>
               </ul>

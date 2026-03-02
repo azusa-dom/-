@@ -5,15 +5,15 @@ import { ProfileScreen } from './Profile';
 
 export function MainTabs({ activeTab, setActiveTab }: { activeTab: 'home' | 'ai' | 'profile', setActiveTab: (tab: 'home' | 'ai' | 'profile') => void }) {
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 relative">
-      <div className="flex-1 overflow-y-auto pb-[70px]">
+    <div className="flex-1 relative bg-slate-50">
+      <div className="absolute inset-0 pb-[72px] overflow-hidden">
         {activeTab === 'home' && <HomeScreen />}
         {activeTab === 'ai' && <AIAssistantScreen />}
         {activeTab === 'profile' && <ProfileScreen />}
       </div>
       
       {/* Bottom Tab Bar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 pt-2 pb-2 px-6 flex justify-between items-center z-40 h-[60px]">
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-8px_24px_rgba(15,23,42,0.06)] pt-2 pb-2 px-6 flex justify-between items-center z-40 h-[60px]">
         <TabItem icon={<Home />} label="主页" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
         <TabItem icon={<MessageSquare />} label="AI助手" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} />
         <TabItem icon={<User />} label="我的" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />

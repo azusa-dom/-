@@ -1,8 +1,48 @@
+import { useMemo, useState, type ReactNode } from 'react';
 import { useNav } from '../App';
-import { ChevronLeft, Stethoscope, FileText, Heart, GraduationCap, AlertCircle, GitMerge, MessageCircle, Search, ClipboardCheck, PhoneCall, ChevronRight } from 'lucide-react';
+import { useDemoData } from '../context/DemoDataContext';
+import {
+  ChevronLeft,
+  MessageCircle,
+  PhoneCall,
+  Search,
+  ClipboardCheck,
+  GitBranch,
+  HeartPulse,
+  GraduationCap,
+  ChevronRight,
+  FileText,
+} from 'lucide-react';
+import { openCustomerSupport } from '../lib/contact';
+
+function toStatus(status: string) {
+  if (status === 'submitted') return '已提交';
+  if (status === 'processing') return '处理中';
+  if (status === 'completed') return '已完成';
+  return status;
+}
 
 export function ServicePortal() {
   const { pop, push } = useNav();
+  const { serviceRequests } = useDemoData();
+  const [notice, setNotice] = useState('');
+
+  const latestRequest = useMemo(
+    () => [...serviceRequests].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0],
+    [serviceRequests],
+  );
+
+  const openSupport = () => {
+    openCustomerSupport();
+    setNotice('已跳转企业微信客服');
+    window.setTimeout(() => setNotice(''), 2200);
+  };
+
+  const callHotline = () => {
+    window.location.href = 'tel:+442012345678';
+    setNotice('正在呼叫 24 小时紧急热线：+44 (0) 20 1234 5678');
+    window.setTimeout(() => setNotice(''), 2800);
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full overflow-hidden">
@@ -13,127 +53,117 @@ export function ServicePortal() {
         <h1 className="text-lg font-bold ml-2">服务入口</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pb-24">
-        <div className="space-y-4 mb-8">
-          {/* 1. 找医生与科室 */}
-          <button 
+      <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-5">
+        <section className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
+          <h2 className="text-base font-bold text-slate-800">联系客服</h2>
+          <p className="text-xs text-slate-500 mt-1">常规咨询默认接入企业微信在线客服。</p>
+          <button
+            onClick={openSupport}
+            className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white rounded-2xl py-3 font-semibold flex items-center justify-center gap-2 transition-colors"
+          >
+            <MessageCircle size={16} />
+            在线联系客服
+          </button>
+        </section>
+
+        <section className="bg-red-50 border border-red-100 rounded-3xl p-5">
+          <h2 className="text-base font-bold text-red-700">紧急支持（24小时热线）</h2>
+          <p className="text-xs text-red-500 mt-1">仅用于突发急症或明显恶化症状。非紧急咨询请优先使用企业微信在线客服；若危及生命请立即拨打 999。</p>
+          <button
+            onClick={callHotline}
+            className="mt-4 w-full bg-white border border-red-200 text-red-600 rounded-2xl py-3 font-semibold flex items-center justify-center gap-2"
+          >
+            <PhoneCall size={16} />
+            呼叫紧急热线
+          </button>
+        </section>
+
+        {notice && <div className="bg-white border border-slate-100 rounded-xl p-3 text-sm text-slate-600">{notice}</div>}
+
+        {latestRequest && (
+          <section className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+            <p className="text-[11px] text-blue-500 font-bold tracking-wide mb-1">最近服务</p>
+            <p className="text-sm font-semibold text-blue-900">{latestRequest.title}</p>
+            <p className="text-xs text-blue-700 mt-1">
+              {latestRequest.requestNo} · {toStatus(latestRequest.status)}
+            </p>
+            <button onClick={() => push({ id: 'request-progress', requestId: latestRequest.id })} className="mt-3 text-sm font-semibold text-blue-600 inline-flex items-center gap-1">
+              查看该申请
+              <ChevronRight size={14} />
+            </button>
+          </section>
+        )}
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-bold text-slate-400 tracking-wider uppercase ml-1">核心服务入口</h3>
+          <PortalActionCard
+            icon={<Search size={18} />}
+            title="找医生与科室"
+            desc="描述症状后快速匹配门诊路径"
             onClick={() => push({ id: 'booking', title: '找医生与科室' })}
-            className="w-full bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 active:scale-[0.98] transition-transform"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-              <Search size={24} />
-            </div>
-            <div className="text-left flex-1">
-              <h4 className="font-bold text-slate-800">找医生与科室</h4>
-              <p className="text-xs text-slate-400">对接全英优质医疗资源与专家</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-300" />
-          </button>
-
-          {/* 2. GP 注册与建档 */}
-          <button 
+          />
+          <PortalActionCard
+            icon={<ClipboardCheck size={18} />}
+            title="GP注册与建档"
+            desc="建立 NHS 关联档案并完成首诊准备"
             onClick={() => push({ id: 'booking', title: 'GP 注册与建档' })}
-            className="w-full bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 active:scale-[0.98] transition-transform"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-              <ClipboardCheck size={24} />
-            </div>
-            <div className="text-left flex-1">
-              <h4 className="font-bold text-slate-800">GP 注册与建档</h4>
-              <p className="text-xs text-slate-400">协助完成 NHS 注册与医疗档案建立</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-300" />
-          </button>
-
-          {/* 3. 心理支持 */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-5 pb-2 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                <Heart size={18} />
-              </div>
-              <h4 className="font-bold text-slate-800">心理支持</h4>
-            </div>
-            <div className="grid grid-cols-2 gap-px bg-slate-50">
-              <button 
-                onClick={() => push({ id: 'booking', title: '心理在线评估' })}
-                className="bg-white p-4 flex flex-col items-center gap-2 active:bg-slate-50 transition-colors"
-              >
-                <span className="text-sm font-bold text-slate-700">在线评估</span>
-                <span className="text-[10px] text-slate-400">情绪与压力快速测评</span>
-              </button>
-              <button 
-                onClick={() => push({ id: 'booking', title: '心理预约支持' })}
-                className="bg-white p-4 flex flex-col items-center gap-2 active:bg-slate-50 transition-colors"
-              >
-                <span className="text-sm font-bold text-slate-700">预约支持</span>
-                <span className="text-[10px] text-slate-400">专业心理咨询预约</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 4. 学业文件 */}
-          <button 
+          />
+          <PortalActionCard
+            icon={<GitBranch size={18} />}
+            title="专科转诊绿色通道"
+            desc="优先衔接影像检查与专家门诊"
+            onClick={() => push({ id: 'booking', title: '专科转诊绿色通道' })}
+          />
+          <PortalActionCard
+            icon={<HeartPulse size={18} />}
+            title="心理健康测评"
+            desc="先完成 PHQ-9 测评，再安排后续支持"
+            onClick={() => push({ id: 'mental-assessment' })}
+          />
+          <PortalActionCard
+            icon={<GraduationCap size={18} />}
+            title="学业文件"
+            desc="申请病假条（Sick Note）并查看进度"
             onClick={() => push({ id: 'academic-docs' })}
-            className="w-full bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 active:scale-[0.98] transition-transform"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-              <GraduationCap size={24} />
-            </div>
-            <div className="text-left flex-1">
-              <h4 className="font-bold text-slate-800">学业文件</h4>
-              <p className="text-xs text-slate-400">申请病假条 (Sick Note)</p>
-            </div>
-            <span className="bg-blue-500 text-white text-[10px] px-3 py-1.5 rounded-full font-bold">申请病假条</span>
-          </button>
+          />
+        </section>
 
-          {/* 5. 紧急支持 (24小时) */}
-          <button 
-            className="w-full bg-red-50 p-5 rounded-3xl shadow-sm border border-red-100 flex items-center gap-4 active:scale-[0.98] transition-transform"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-red-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-200">
-              <AlertCircle size={24} />
-            </div>
-            <div className="text-left flex-1">
-              <h4 className="font-bold text-red-600">紧急支持 (24小时)</h4>
-              <p className="text-xs text-red-400">突发急症、需立即响应的医疗需求</p>
-            </div>
-            <PhoneCall size={20} className="text-red-300" />
-          </button>
-        </div>
-
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6">
-          <div className="flex items-center gap-2 mb-6">
-            <GitMerge className="text-blue-500" size={20} />
-            <h2 className="font-bold text-slate-800">服务发起流程</h2>
-          </div>
-
-          <div className="relative pl-4 space-y-6">
-            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-blue-100"></div>
-            
-            <ProcessStep num={1} title="选择服务类型" desc="通过上方入口选择您需要的服务模块" />
-            <ProcessStep num={2} title="提交基本需求" desc="填写相关信息或直接联系客服说明情况" />
-            <ProcessStep num={3} title="客服确认与分诊" desc="服务团队评估情况并对接相应资源" />
-            <ProcessStep num={4} title="协助安排后续服务" desc="提供具体协助，如预约、陪同或出具文件" />
-          </div>
-        </div>
-
-        <button className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors text-white rounded-full py-4 font-medium flex items-center justify-center gap-2 shadow-md shadow-blue-200">
-          <MessageCircle size={20} />
-          联系服务团队
+        <button
+          onClick={() => push({ id: 'faq' })}
+          className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl py-3 font-medium inline-flex items-center justify-center gap-2"
+        >
+          <FileText size={16} />
+          查看常见问题
         </button>
       </div>
     </div>
   );
 }
 
-function ProcessStep({ num, title, desc }: any) {
+function PortalActionCard({
+  icon,
+  title,
+  desc,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="relative pl-6">
-      <div className="absolute left-[-13px] top-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold border-4 border-white">
-        {num}
+    <button
+      onClick={onClick}
+      className="w-full bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-[0.99] transition-transform"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
+          <p className="text-xs text-slate-500 mt-1">{desc}</p>
+        </div>
+        <ChevronRight size={18} className="text-slate-300 shrink-0" />
       </div>
-      <h4 className="font-bold text-slate-800 text-sm mb-1">{title}</h4>
-      <p className="text-xs text-slate-500">{desc}</p>
-    </div>
+    </button>
   );
 }

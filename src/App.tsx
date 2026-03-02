@@ -9,6 +9,11 @@ import { AboutUs } from './screens/AboutUs';
 import { MedicalGuide } from './screens/MedicalGuide';
 import { FAQ } from './screens/FAQ';
 import { AcademicDocs } from './screens/AcademicDocs';
+import { DemoDataProvider } from './context/DemoDataContext';
+import { MentalAssessment } from './screens/MentalAssessment';
+import { PrivacyPolicy } from './screens/PrivacyPolicy';
+import { UserAgreement } from './screens/UserAgreement';
+import { RequestProgress } from './screens/RequestProgress';
 
 export type Screen = 
   | { id: 'login' }
@@ -18,10 +23,14 @@ export type Screen =
   | { id: 'benefits' }
   | { id: 'service-portal' }
   | { id: 'booking', title: string }
+  | { id: 'request-progress', requestId: string }
   | { id: 'about' }
+  | { id: 'privacy' }
+  | { id: 'user-agreement' }
   | { id: 'medical-guide' }
   | { id: 'faq' }
-  | { id: 'academic-docs' };
+  | { id: 'academic-docs' }
+  | { id: 'mental-assessment' };
 
 interface NavContextType {
   push: (screen: Screen) => void;
@@ -46,6 +55,12 @@ export default function App() {
   const reset = (screen: Screen) => setStack([screen]);
 
   const currentScreen = stack[stack.length - 1];
+  const screenKey =
+    currentScreen.id === 'booking'
+      ? `${currentScreen.id}-${currentScreen.title}`
+      : currentScreen.id === 'request-progress'
+        ? `${currentScreen.id}-${currentScreen.requestId}`
+        : currentScreen.id;
 
   let topBg = 'bg-white';
   let statusText = 'text-black';
@@ -59,22 +74,23 @@ export default function App() {
       topBg = 'bg-slate-50';
     }
     bottomBg = 'bg-white';
-  } else if (['about', 'benefits'].includes(currentScreen.id)) {
+  } else if (currentScreen.id === 'benefits') {
     topBg = 'bg-blue-500';
     statusText = 'text-white';
-  } else if (['invite-code', 'profile'].includes(currentScreen.id)) {
+  } else if (currentScreen.id === 'invite-code') {
     topBg = 'bg-slate-50';
     bottomBg = 'bg-slate-50';
   }
 
   return (
-    <NavContext.Provider value={{ push, pop, reset }}>
-      <div className="w-full min-h-screen bg-[#121212] flex items-center justify-center font-sans text-slate-900">
-        {/* REAL iPhone 17 Pro Max Viewport (440x956) */}
-        <div className="w-[440px] h-[956px] bg-black relative overflow-hidden flex flex-col shadow-2xl">
+    <DemoDataProvider>
+      <NavContext.Provider value={{ push, pop, reset }}>
+        <div className="w-full min-h-dvh bg-slate-50 md:bg-[#121212] flex md:items-center md:justify-center font-sans text-slate-900">
+        {/* Mobile-first viewport; desktop keeps iPhone frame preview */}
+        <div className="w-full h-dvh md:w-[440px] md:h-[956px] bg-black relative overflow-hidden flex flex-col md:shadow-2xl md:rounded-[38px]">
           
           {/* Top Safe Area (Status Bar & Dynamic Island) */}
-          <div className={`h-[59px] w-full shrink-0 relative z-50 flex items-end justify-between px-8 pb-2 transition-colors duration-300 ${topBg} ${statusText}`}>
+          <div className={`hidden md:flex h-[59px] w-full shrink-0 relative z-50 items-end justify-between px-8 pb-2 transition-colors duration-300 ${topBg} ${statusText}`}>
              <span className="text-[16px] font-semibold tracking-tight">9:41</span>
              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[125px] h-[37px] bg-black rounded-full z-[100]"></div>
              <div className="flex items-center gap-1.5 pb-0.5">
@@ -88,7 +104,7 @@ export default function App() {
           <div className="flex-1 relative overflow-hidden flex flex-col bg-slate-50">
             <AnimatePresence initial={false} mode="popLayout">
               <motion.div
-                key={currentScreen.id + (currentScreen.id === 'booking' ? currentScreen.title : '')}
+                key={screenKey}
                 initial={{ x: '100%', opacity: 0.5 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: '-20%', opacity: 0 }}
@@ -102,20 +118,25 @@ export default function App() {
                 {currentScreen.id === 'benefits' && <Benefits />}
                 {currentScreen.id === 'service-portal' && <ServicePortal />}
                 {currentScreen.id === 'booking' && <BookingDemo title={currentScreen.title} />}
+                {currentScreen.id === 'request-progress' && <RequestProgress requestId={currentScreen.requestId} />}
                 {currentScreen.id === 'about' && <AboutUs />}
+                {currentScreen.id === 'privacy' && <PrivacyPolicy />}
+                {currentScreen.id === 'user-agreement' && <UserAgreement />}
                 {currentScreen.id === 'medical-guide' && <MedicalGuide />}
                 {currentScreen.id === 'faq' && <FAQ />}
                 {currentScreen.id === 'academic-docs' && <AcademicDocs />}
+                {currentScreen.id === 'mental-assessment' && <MentalAssessment />}
               </motion.div>
             </AnimatePresence>
           </div>
           
           {/* Bottom Safe Area (Home Indicator) */}
-          <div className={`h-[34px] w-full shrink-0 relative z-50 flex justify-center items-end pb-2 transition-colors duration-300 ${bottomBg}`}>
+          <div className={`hidden md:flex h-[34px] w-full shrink-0 relative z-50 justify-center items-end pb-2 transition-colors duration-300 ${bottomBg}`}>
             <div className="w-[140px] h-[5px] bg-black rounded-full"></div>
           </div>
         </div>
       </div>
-    </NavContext.Provider>
+      </NavContext.Provider>
+    </DemoDataProvider>
   );
 }

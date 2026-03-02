@@ -5,6 +5,7 @@ import { useState } from 'react';
 export function FAQ() {
   const { pop } = useNav();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [query, setQuery] = useState('');
 
   const faqs = [
     {
@@ -13,7 +14,7 @@ export function FAQ() {
     },
     {
       q: "和NHS GP的区别?",
-      a: "我们的全科医生(GP)来自NHS系统，遵循英国医疗专业标准执业，诊疗费用于立诊所。我们整合全英多元化医疗资源，可对接NHS公立医院和私立医院的专科医生，所有医生均符合GMC注册标准和NHS规范。"
+      a: "我们的全科医生(GP)遵循英国医疗专业标准执业，服务可对接NHS及私立专科资源。我们主要提供中文沟通、分诊协助、预约衔接与后续跟进支持，帮助你更高效地使用英国医疗体系。"
     },
     {
       q: "如何建立我在英国的医疗档案?",
@@ -45,6 +46,12 @@ export function FAQ() {
     }
   ];
 
+  const filteredFaqs = faqs.filter(item => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return true;
+    return item.q.toLowerCase().includes(keyword) || item.a.toLowerCase().includes(keyword);
+  });
+
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full overflow-hidden">
       <div className="pt-12 pb-4 px-6 bg-white flex items-center sticky top-0 z-10 shadow-sm">
@@ -55,8 +62,21 @@ export function FAQ() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 pb-24">
+        <div className="mb-4">
+          <input
+            type="text"
+            value={query}
+            onChange={event => {
+              setQuery(event.target.value);
+              setOpenIndex(null);
+            }}
+            placeholder="搜索问题关键词，如：Sick Note、999、续约"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-300"
+          />
+        </div>
+
         <div className="space-y-4">
-          {faqs.map((faq, index) => (
+          {filteredFaqs.map((faq, index) => (
             <div key={index} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <button 
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
@@ -78,6 +98,11 @@ export function FAQ() {
               )}
             </div>
           ))}
+          {filteredFaqs.length === 0 && (
+            <div className="bg-white rounded-2xl p-6 text-sm text-slate-500 border border-slate-100">
+              没有找到匹配的问题，请尝试更换关键词或前往 AI 助手继续提问。
+            </div>
+          )}
         </div>
       </div>
     </div>
