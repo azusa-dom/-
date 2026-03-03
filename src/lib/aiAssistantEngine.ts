@@ -12,7 +12,14 @@ export type AssistantIntent =
   | 'general';
 
 export interface AssistantAction {
-  type: 'open-booking' | 'open-medical-guide' | 'open-faq' | 'open-academic-docs' | 'open-mental-assessment';
+  type:
+    | 'open-booking'
+    | 'open-medical-guide'
+    | 'open-faq'
+    | 'open-academic-docs'
+    | 'open-mental-assessment'
+    | 'open-benefits'
+    | 'open-request-progress';
   label: string;
   payload?: string;
 }
@@ -142,7 +149,7 @@ export function generateAssistantReply(params: {
       intent,
       urgency: 'urgent',
       text:
-        '你描述的情况可能涉及紧急风险。请先按英国紧急分级处理：\n1) 若出现胸痛、呼吸困难、意识丧失或大出血，请立即拨打 999。\n2) 非致命但需要当日医疗建议，请拨打 NHS 111。\n3) 同时你可以在 App 发起「紧急支持（24小时）」服务，我们会协助后续分诊与就医衔接。',
+        '你描述的情况可能涉及紧急风险。请先按英国紧急分级处理：\n1) 若出现胸痛、呼吸困难、意识丧失或大出血，请立即拨打 999。\n2) 非致命但需要当日医疗建议，请拨打 NHS 111。\n3) 同时你可以在 App 发起「紧急热线 24h」路径，我们会协助后续分诊与就医衔接。',
       followUps: ['我现在需要发起紧急支持', '111 和 999 的使用区别是什么？', '去 A&E 前要准备什么？'],
       action: { type: 'open-booking', label: '发起紧急支持', payload: '紧急支持 (24小时)' },
     };
@@ -153,7 +160,7 @@ export function generateAssistantReply(params: {
       intent,
       urgency: 'normal',
       text:
-        '预约 GP 建议按这个顺序：\n1) 确认已完成 GP 注册与建档。\n2) 说明主要症状和持续时间，我们会先做初步分诊。\n3) 选择期望日期和时间段提交申请。\n4) 客服确认后会回传最终预约安排。',
+        'GP 建档建议按这个顺序：\n1) 填写基础信息与联系方式。\n2) 补充当前症状或既往病史（选填）。\n3) 提交建档申请后等待服务团队回访确认。\n4) 完成建档后再进入后续 GP 就诊安排。',
       followUps: ['帮我发起 GP 注册与建档', '预约 GP 一般要等多久？', '初诊需要准备哪些材料？'],
       action: { type: 'open-booking', label: '发起 GP 注册申请', payload: 'GP 注册与建档' },
     };
@@ -181,7 +188,7 @@ export function generateAssistantReply(params: {
       text:
         `你的会员服务当前为激活状态，有效期至 ${params.context.membershipExpiry}。核心权益包括：中文医疗沟通支持、GP 注册与分诊协助、心理评估支持、学业文件协助（如 Sick Note）以及紧急情况下就医指引。`,
       followUps: ['打开我的权益页面', '学业文件支持具体包含什么？', '紧急支持是 24 小时在线吗？'],
-      action: { type: 'open-faq', label: '查看权益细则' },
+      action: { type: 'open-benefits', label: '查看会员权益' },
     };
   }
 
@@ -190,7 +197,7 @@ export function generateAssistantReply(params: {
       intent,
       urgency: 'normal',
       text:
-        '如果你近期有持续焦虑、失眠或情绪低落，建议尽快做一次心理在线评估。评估后我们会根据风险等级给出后续建议，必要时可协助转接专业心理咨询或 GP 路径。',
+        '如果你近期有持续焦虑、失眠或情绪低落，建议尽快完成心理测评中心（PHQ-9 / GAD-7 / PSS-10）。评估后系统会给出分级动作建议，必要时可协助转接心理咨询或 GP 路径。',
       followUps: ['帮我预约心理在线评估', '评估大概需要多长时间？', '家长可以同步收到结果吗？'],
       action: { type: 'open-mental-assessment', label: '开始心理测评' },
     };
@@ -207,13 +214,23 @@ export function generateAssistantReply(params: {
       };
     }
 
+    const hasSchedule = Boolean(
+      latestService.preferredDate &&
+        latestService.preferredTime &&
+        latestService.preferredTime !== '无需预约' &&
+        latestService.preferredDate !== '资料建档',
+    );
+    const scheduleText = hasSchedule
+      ? `期望时间：${latestService.preferredDate} ${latestService.preferredTime}。`
+      : '该申请为资料提交，不涉及预约时段。';
+
     return {
       intent,
       urgency: 'normal',
       text:
-        `你最近的服务申请是「${latestService.title}」（${latestService.requestNo}），当前状态：${toZhStatus(latestService.status)}。\n期望时间：${latestService.preferredDate} ${latestService.preferredTime}。\n如你希望加急，我建议补充症状严重程度和可接听回访时间。`,
+        `你最近的服务申请是「${latestService.title}」（${latestService.requestNo}），当前状态：${toZhStatus(latestService.status)}。\n${scheduleText}\n如你希望加急，我建议补充症状严重程度和可接听回访时间。`,
       followUps: ['帮我催办这条申请', '我想修改预约时间', '查看病假条记录'],
-      action: { type: 'open-academic-docs', label: '查看学业文件记录' },
+      action: { type: 'open-request-progress', label: '查看这条服务进度', payload: latestService.id },
     };
   }
 

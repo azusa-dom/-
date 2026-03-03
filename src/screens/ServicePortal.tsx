@@ -34,7 +34,7 @@ export function ServicePortal() {
 
   const openSupport = () => {
     openCustomerSupport();
-    setNotice('已跳转企业微信客服');
+    setNotice('已进入即时咨询（企微文字客服）');
     window.setTimeout(() => setNotice(''), 2200);
   };
 
@@ -55,20 +55,20 @@ export function ServicePortal() {
 
       <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-5">
         <section className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
-          <h2 className="text-base font-bold text-slate-800">联系客服</h2>
-          <p className="text-xs text-slate-500 mt-1">常规咨询默认接入企业微信在线客服。</p>
+          <h2 className="text-base font-bold text-slate-800">即时咨询</h2>
+          <p className="text-xs text-slate-500 mt-1">企微文字客服，适用于常规咨询与问诊沟通。</p>
           <button
             onClick={openSupport}
             className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white rounded-2xl py-3 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <MessageCircle size={16} />
-            在线联系客服
+            进入文字咨询
           </button>
         </section>
 
         <section className="bg-red-50 border border-red-100 rounded-3xl p-5">
-          <h2 className="text-base font-bold text-red-700">紧急支持（24小时热线）</h2>
-          <p className="text-xs text-red-500 mt-1">仅用于突发急症或明显恶化症状。非紧急咨询请优先使用企业微信在线客服；若危及生命请立即拨打 999。</p>
+          <h2 className="text-base font-bold text-red-700">紧急热线 24h</h2>
+          <p className="text-xs text-red-500 mt-1">电话直连值班团队。仅用于突发急症；非紧急请优先使用文字咨询。若危及生命请立即拨打 999。</p>
           <button
             onClick={callHotline}
             className="mt-4 w-full bg-white border border-red-200 text-red-600 rounded-2xl py-3 font-semibold flex items-center justify-center gap-2"
@@ -116,8 +116,8 @@ export function ServicePortal() {
           />
           <PortalActionCard
             icon={<HeartPulse size={18} />}
-            title="心理健康测评"
-            desc="先完成 PHQ-9 测评，再安排后续支持"
+            title="心理测评中心"
+            desc="PHQ-9 / GAD-7 / PSS-10 结果联动动作建议"
             onClick={() => push({ id: 'mental-assessment' })}
           />
           <PortalActionCard

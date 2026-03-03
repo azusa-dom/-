@@ -41,6 +41,7 @@ export function RequestProgress({ requestId }: { requestId: string }) {
   }
 
   const status = request.status;
+  const hasSchedule = Boolean(request.preferredDate && request.preferredTime && request.preferredTime !== '无需预约');
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full overflow-hidden">
@@ -79,10 +80,14 @@ export function RequestProgress({ requestId }: { requestId: string }) {
         </section>
 
         <section className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
-          <p className="text-xs text-slate-500">期望时间</p>
-          <p className="text-sm font-semibold text-slate-800 mt-1">
-            {request.preferredDate} · {request.preferredTime}
-          </p>
+          <p className="text-xs text-slate-500">{hasSchedule ? '期望时间' : '申请信息'}</p>
+          {hasSchedule ? (
+            <p className="text-sm font-semibold text-slate-800 mt-1">
+              {request.preferredDate} · {request.preferredTime}
+            </p>
+          ) : (
+            <p className="text-sm font-semibold text-slate-800 mt-1">该申请为资料提交，不涉及预约时段。</p>
+          )}
           {request.note && <p className="text-xs text-slate-500 mt-2 leading-relaxed">备注：{request.note}</p>}
         </section>
       </div>

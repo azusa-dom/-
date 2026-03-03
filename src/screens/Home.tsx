@@ -38,13 +38,13 @@ export function HomeScreen() {
 
         <section className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
           <h3 className="text-lg font-bold text-slate-800">需要医疗帮助？</h3>
-          <p className="text-sm text-slate-500 mt-1">在线客服将根据你的症状与紧急程度安排下一步。</p>
+          <p className="text-sm text-slate-500 mt-1">常规问题走文字咨询，急症请直接使用 24h 电话热线。</p>
           <button
             onClick={() => openCustomerSupport()}
             className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white rounded-2xl py-3.5 font-semibold transition-colors inline-flex items-center justify-center gap-2"
           >
             <MessageCircle size={16} />
-            在线联系客服
+            发起即时咨询
           </button>
         </section>
 
@@ -65,8 +65,8 @@ export function HomeScreen() {
             />
             <ServiceGridCard
               icon={<HeartPulse size={16} />}
-              title="心理健康支持"
-              desc="在线评估与预约转介"
+              title="心理测评中心"
+              desc="PHQ-9 / GAD-7 / PSS-10 综合评估"
               onClick={() => push({ id: 'mental-assessment' })}
             />
             <ServiceGridCard
@@ -77,8 +77,8 @@ export function HomeScreen() {
             />
             <ServiceGridCard
               icon={<Siren size={16} />}
-              title="紧急支持（24小时）"
-              desc="仅限急症，非紧急请用在线客服"
+              title="紧急热线 24h"
+              desc="电话直连值班团队，危及生命请拨 999"
               onClick={() => push({ id: 'booking', title: '紧急支持 (24小时)' })}
             />
             <ServiceGridCard

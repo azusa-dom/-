@@ -72,12 +72,12 @@ export function ProfileScreen() {
         <button
           onClick={() => {
             openCustomerSupport();
-            showNotice('正在打开企业微信客服...');
+            showNotice('正在进入即时咨询...');
           }}
           className="w-full mb-8 bg-white border border-slate-100 text-blue-600 rounded-2xl py-3 font-semibold inline-flex items-center justify-center gap-2 shadow-sm"
         >
           <MessageCircle size={15} />
-          联系客服
+          即时咨询
         </button>
 
         {notice && (

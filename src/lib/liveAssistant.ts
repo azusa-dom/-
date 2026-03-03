@@ -1,6 +1,14 @@
 import type { AssistantContextData } from './aiAssistantEngine';
 
-export type LiveActionType = 'none' | 'booking' | 'mental-assessment' | 'medical-guide' | 'faq' | 'academic-docs';
+export type LiveActionType =
+  | 'none'
+  | 'booking'
+  | 'mental-assessment'
+  | 'medical-guide'
+  | 'faq'
+  | 'academic-docs'
+  | 'benefits'
+  | 'request-progress';
 
 interface LiveAssistantInput {
   input: string;
@@ -41,6 +49,8 @@ function resolveActionType(input?: string): LiveActionType {
   if (value === 'medical-guide') return 'medical-guide';
   if (value === 'faq') return 'faq';
   if (value === 'academic-docs') return 'academic-docs';
+  if (value === 'benefits') return 'benefits';
+  if (value === 'request-progress') return 'request-progress';
   return 'none';
 }
 
@@ -86,7 +96,9 @@ function getApiConfig() {
   const baseUrl = (import.meta.env.VITE_AI_BASE_URL || 'https://api-inference.modelscope.cn/v1').replace(/\/$/, '');
   const apiKey = import.meta.env.VITE_AI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
   const model = import.meta.env.VITE_AI_MODEL || import.meta.env.VITE_OPENAI_MODEL || 'ZhipuAI/GLM-5';
-  return { baseUrl, apiKey, model };
+  const timeoutRaw = Number(import.meta.env.VITE_AI_TIMEOUT_MS || 2500);
+  const timeoutMs = Number.isFinite(timeoutRaw) && timeoutRaw >= 500 ? timeoutRaw : 2500;
+  return { baseUrl, apiKey, model, timeoutMs };
 }
 
 export function isLiveAssistantEnabled() {
@@ -95,7 +107,7 @@ export function isLiveAssistantEnabled() {
 }
 
 export async function requestLiveAssistantReply(params: LiveAssistantInput): Promise<LiveAssistantOutput | null> {
-  const { baseUrl, apiKey, model } = getApiConfig();
+  const { baseUrl, apiKey, model, timeoutMs } = getApiConfig();
   if (!apiKey) return null;
 
   const latestService = [...params.context.serviceRequests].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0];
@@ -125,9 +137,9 @@ JSON格式：
   "followUps":["后续问题1","后续问题2","后续问题3"],
   "urgency":"normal 或 urgent",
   "action":{
-    "type":"none|booking|mental-assessment|medical-guide|faq|academic-docs",
+    "type":"none|booking|mental-assessment|medical-guide|faq|academic-docs|benefits|request-progress",
     "label":"按钮文案",
-    "payload":"当 type=booking 时可填预约标题，如找医生与科室"
+    "payload":"当 type=booking 时可填预约标题；当 type=request-progress 时传 requestId"
   }
 }`;
 
@@ -141,12 +153,15 @@ ${historyText || '无'}
 ${params.input}`;
 
   try {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model,
         messages: [
@@ -156,6 +171,8 @@ ${params.input}`;
         temperature: 0.35,
         max_tokens: 700,
       }),
+    }).finally(() => {
+      window.clearTimeout(timer);
     });
 
     if (!response.ok) return null;
