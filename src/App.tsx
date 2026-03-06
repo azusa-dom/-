@@ -48,7 +48,7 @@ export const useNav = () => {
 
 export default function App() {
   const [stack, setStack] = useState<Screen[]>([{ id: 'login' }]);
-  const [activeTab, setActiveTab] = useState<'home' | 'ai' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'assistant' | 'profile'>('home');
 
   const push = (screen: Screen) => setStack(prev => [...prev, screen]);
   const pop = () => setStack(prev => prev.length > 1 ? prev.slice(0, -1) : prev);

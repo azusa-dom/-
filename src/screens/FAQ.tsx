@@ -100,7 +100,7 @@ export function FAQ() {
           ))}
           {filteredFaqs.length === 0 && (
             <div className="bg-white rounded-2xl p-6 text-sm text-slate-500 border border-slate-100">
-              没有找到匹配的问题，请尝试更换关键词或前往 AI 助手继续提问。
+              没有找到匹配的问题，请尝试更换关键词或前往智能助手继续提问。
             </div>
           )}
         </div>

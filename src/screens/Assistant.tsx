@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Bot, ChevronRight, LoaderCircle, Send, Sparkles } from 'lucide-react';
 import { useNav } from '../App';
 import { useDemoData } from '../context/DemoDataContext';
-import { generateAssistantReply, type AssistantAction, type AssistantIntent } from '../lib/aiAssistantEngine';
-import { isLiveAssistantEnabled, requestLiveAssistantReply, type LiveActionType } from '../lib/liveAssistant';
+import { generateAssistantReply, type AssistantAction, type AssistantIntent } from '../lib/assistantEngine';
 
 type Role = 'bot' | 'user';
 
@@ -16,11 +15,10 @@ interface ChatMessage {
   action?: AssistantAction;
 }
 
-const CHAT_STORAGE_KEY = 'yuntu-ai-chat-history-v1';
+const CHAT_STORAGE_KEY = 'yuntu-assistant-chat-history-v1';
 const defaultPrompts = ['如何预约 GP 建档?', '我想做心理测评', '紧急情况拨打什么电话?', '我的会员权益有哪些?'];
-const thinkingTips = ['正在分析问题...', '正在生成建议...', '正在匹配服务路径...'];
-const FAST_DEMO_MODE = import.meta.env.VITE_FAST_DEMO_MODE !== '0';
-const FAST_REPLY_LATENCY_MS = 120;
+const thinkingTips = ['正在整理你的问题...', '正在生成建议...', '正在匹配服务路径...'];
+const RESPONSE_LATENCY_MS = 120;
 
 function nowLabel() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -31,7 +29,7 @@ function createWelcomeMessage(membershipExpiry: string): ChatMessage {
     id: 'welcome',
     role: 'bot',
     text:
-      `您好，我是云途护航 AI 助手。\n当前账号会员有效期至 ${membershipExpiry}。\n您可以直接告诉我：预约 GP、申请病假条、查看进度、紧急就医等具体需求。`,
+      `您好，我是云途护航智能助手。\n当前账号会员有效期至 ${membershipExpiry}。\n您可以直接告诉我：预约 GP、申请病假条、查看进度、紧急就医等具体需求。`,
     time: nowLabel(),
     urgency: 'normal',
   };
@@ -65,81 +63,7 @@ function restoreMessages(membershipExpiry: string): ChatMessage[] {
   }
 }
 
-function inferAction(question: string, latestRequestId?: string): AssistantAction | undefined {
-  const input = question.toLowerCase();
-  if (/紧急|999|111|急诊|呼吸困难|胸痛/.test(input)) {
-    return { type: 'open-booking', label: '发起紧急支持', payload: '紧急支持 (24小时)' };
-  }
-  if (/进度|状态|催办|申请记录/.test(input) && latestRequestId) {
-    return { type: 'open-request-progress', label: '查看这条服务进度', payload: latestRequestId };
-  }
-  if (/权益|会员|有效期|套餐/.test(input)) {
-    return { type: 'open-benefits', label: '查看会员权益' };
-  }
-  if (/心理|焦虑|抑郁|失眠|情绪/.test(input)) {
-    return { type: 'open-mental-assessment', label: '开始心理测评' };
-  }
-  if (/病假|sick|fit note|证明/.test(input)) {
-    return { type: 'open-booking', label: '申请病假条', payload: '申请病假条' };
-  }
-  if (/gp|注册|建档|看医生|门诊/.test(input)) {
-    return { type: 'open-booking', label: '发起就诊申请', payload: '找医生与科室' };
-  }
-  if (/费用|多少钱|价格/.test(input)) {
-    return { type: 'open-faq', label: '查看常见问题' };
-  }
-  return undefined;
-}
-
-function mapLiveAction(type: LiveActionType, label?: string, payload?: string): AssistantAction | undefined {
-  if (type === 'booking') {
-    return {
-      type: 'open-booking',
-      label: label || '发起服务申请',
-      payload: payload || '找医生与科室',
-    };
-  }
-  if (type === 'mental-assessment') {
-    return {
-      type: 'open-mental-assessment',
-      label: label || '开始心理测评',
-    };
-  }
-  if (type === 'medical-guide') {
-    return {
-      type: 'open-medical-guide',
-      label: label || '查看就医指南',
-    };
-  }
-  if (type === 'faq') {
-    return {
-      type: 'open-faq',
-      label: label || '查看常见问题',
-    };
-  }
-  if (type === 'academic-docs') {
-    return {
-      type: 'open-academic-docs',
-      label: label || '查看学业文件',
-    };
-  }
-  if (type === 'benefits') {
-    return {
-      type: 'open-benefits',
-      label: label || '查看会员权益',
-    };
-  }
-  if (type === 'request-progress') {
-    return {
-      type: 'open-request-progress',
-      label: label || '查看服务进度',
-      payload,
-    };
-  }
-  return undefined;
-}
-
-export function AIAssistantScreen() {
+export function AssistantScreen() {
   const { push } = useNav();
   const { membershipExpiry, serviceRequests, documentRecords } = useDemoData();
   const [messages, setMessages] = useState<ChatMessage[]>(() => restoreMessages(membershipExpiry));
@@ -148,7 +72,6 @@ export function AIAssistantScreen() {
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingText, setThinkingText] = useState(thinkingTips[0]);
   const [lastIntent, setLastIntent] = useState<AssistantIntent | undefined>(undefined);
-  const liveMode = isLiveAssistantEnabled();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const assistantContext = useMemo(
@@ -158,10 +81,6 @@ export function AIAssistantScreen() {
       documentRecords,
     }),
     [membershipExpiry, serviceRequests, documentRecords],
-  );
-  const latestRequestId = useMemo(
-    () => [...serviceRequests].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0]?.id,
-    [serviceRequests],
   );
 
   useEffect(() => {
@@ -208,12 +127,12 @@ export function AIAssistantScreen() {
     }
   };
 
-  const runAssistant = async (question: string) => {
+  const runAssistant = (question: string) => {
     const tip = thinkingTips[Math.floor(Math.random() * thinkingTips.length)];
     setThinkingText(tip);
     setIsThinking(true);
 
-    const pushLocalReply = () => {
+    window.setTimeout(() => {
       const reply = generateAssistantReply({
         input: question,
         context: assistantContext,
@@ -234,41 +153,7 @@ export function AIAssistantScreen() {
       setSmartPrompts(reply.followUps.slice(0, 4));
       setLastIntent(reply.intent);
       setIsThinking(false);
-    };
-
-    if (FAST_DEMO_MODE) {
-      window.setTimeout(pushLocalReply, FAST_REPLY_LATENCY_MS);
-      return;
-    }
-
-    const liveReply = await requestLiveAssistantReply({
-      input: question,
-      context: assistantContext,
-      history: messages.map(item => ({
-        role: item.role === 'bot' ? 'assistant' : 'user',
-        text: item.text,
-      })),
-    });
-
-    if (liveReply) {
-      const liveAction = mapLiveAction(liveReply.action.type, liveReply.action.label, liveReply.action.payload);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `bot-${Date.now()}`,
-          role: 'bot',
-          text: liveReply.text,
-          time: nowLabel(),
-          urgency: liveReply.urgency,
-          action: liveAction || inferAction(question, latestRequestId),
-        },
-      ]);
-      setSmartPrompts(liveReply.followUps.length ? liveReply.followUps : defaultPrompts);
-      setIsThinking(false);
-      return;
-    }
-
-    window.setTimeout(pushLocalReply, FAST_REPLY_LATENCY_MS);
+    }, RESPONSE_LATENCY_MS);
   };
 
   const handleSend = (text: string = input) => {
@@ -293,11 +178,9 @@ export function AIAssistantScreen() {
       <div className="pt-12 pb-4 px-6 bg-white shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-blue-500" />
-          <h1 className="text-lg font-bold text-slate-800">AI 智能助手</h1>
+          <h1 className="text-lg font-bold text-slate-800">智能助手</h1>
         </div>
-        <p className="text-[11px] text-slate-400 mt-1">
-          {liveMode ? '实时 AI 已连接' : '智能模式（未配置实时模型）'}
-        </p>
+        <p className="text-[11px] text-slate-400 mt-1">本地智能分流模式</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 pb-36">
@@ -328,9 +211,7 @@ export function AIAssistantScreen() {
                 {message.text}
               </div>
 
-              <div className={`mt-1 text-[10px] text-slate-400 ${message.role === 'user' ? 'text-right' : ''}`}>
-                {message.time}
-              </div>
+              <div className={`mt-1 text-[10px] text-slate-400 ${message.role === 'user' ? 'text-right' : ''}`}>{message.time}</div>
 
               {message.role === 'bot' && message.action && (
                 <button
@@ -388,7 +269,7 @@ export function AIAssistantScreen() {
                 handleSend();
               }
             }}
-            placeholder="直接输入具体场景，例如：我明天发烧能否申请 Sick Note？"
+            placeholder="输入你的需求，例如：我需要查看最近服务进度"
             className="flex-1 bg-transparent border-none focus:outline-none text-sm py-2"
           />
           <button

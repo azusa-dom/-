@@ -106,9 +106,9 @@ export function LoginFlow({ step }: { step: 'login' | 'bind-phone' | 'invite-cod
                 if (event.key === 'Enter') {
                   event.preventDefault();
                   const normalized = code.trim().toUpperCase();
-                  const valid = /^[A-Z0-9]{6,12}$/.test(normalized);
+                  const valid = /^[A-Z0-9]+$/.test(normalized);
                   if (!valid) {
-                    setError('邀请码无效，请核对后重试');
+                    setError('请输入字母或数字的邀请码');
                     return;
                   }
                   setInviteCode(normalized);
@@ -125,9 +125,9 @@ export function LoginFlow({ step }: { step: 'login' | 'bind-phone' | 'invite-cod
           <button
             onClick={() => {
               const normalized = code.trim().toUpperCase();
-              const valid = /^[A-Z0-9]{6,12}$/.test(normalized);
+              const valid = /^[A-Z0-9]+$/.test(normalized);
               if (!valid) {
-                setError('邀请码无效，请核对后重试');
+                setError('请输入字母或数字的邀请码');
                 return;
               }
               setInviteCode(normalized);
